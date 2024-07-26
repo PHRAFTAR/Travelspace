@@ -8,6 +8,82 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
     <script src="mobile-nav.js" defer></script>
     <script src="banner.js" defer></script>
+    <style>
+        .banner-text {
+            position: absolute;
+            background: none; /* Remove background from text */
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 2rem;
+            color: #fff; /* White text color */
+            display: flex;
+            align-items: center;
+        }
+
+        .cursor {
+            display: inline-block;
+            background-color: #fff;
+            margin-left: 5px;
+            width: 2px;
+            animation: blink 0.7s infinite;
+        }
+
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Add spacing at the bottom of the featured section */
+        .featured {
+            padding: 5rem 0;
+            text-align: center;
+            background-color: #feb47b; /* Sunset color */
+            color: #fff;
+            margin-bottom: 30px; /* Add space to ensure content doesn't overlap with the footer */
+        }
+
+        footer {
+            background-color: #ff7e5f; /* Sunset color */
+            color: #fff;
+            text-align: center;
+            padding: 1rem 0;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            line-height: 0.1;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Typing effect for the banner text
+            const bannerText = document.querySelector('.banner-text');
+            const text = "Welcome to TravelSpace";
+            let index = 0;
+
+            function type() {
+                if (index < text.length) {
+                    bannerText.innerHTML = text.slice(0, index + 1) + '<span class="cursor"></span>';
+                    index++;
+                    setTimeout(type, 150);
+                } else {
+                    setTimeout(erase, 1000); // Wait before erasing the text
+                }
+            }
+
+            function erase() {
+                if (index > 0) {
+                    bannerText.innerHTML = text.slice(0, index - 1) + '<span class="cursor"></span>';
+                    index--;
+                    setTimeout(erase, 100);
+                } else {
+                    setTimeout(type, 500); // Wait before starting to type again
+                }
+            }
+
+            type();
+        });
+    </script>
 </head>
 <body>
     <header>
@@ -35,11 +111,9 @@
             <div class="featured-content">
                 <div class="featured-item">
                     <img src="folder1 images/20240721_192515.jpg" alt="Photo 1">
-                    
                 </div>
                 <div class="featured-item">
                     <img src="folder1 images/IMG_20240505_181206 (1).jpg" alt="Photo 2">
-                    
                 </div>
                 <div class="featured-item">
                     <video controls>
@@ -55,9 +129,9 @@
         <p>&copy; 2024 TravelSpace. All rights reserved.</p>
         <div class="social-icons">
             <a href="#"><i class="fab fa-facebook-f"></i></a>
-            <a href="#"><i class="fab fa-twitter"></i></a></li>
-            <a href="#"><i class="fab fa-instagram"></i></a></li>
-            <a href="#"><i class="fab fa-linkedin-in"></i></a></li>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
         </div>
     </footer>
 </body>
