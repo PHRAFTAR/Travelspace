@@ -95,11 +95,11 @@ nav {
         display: none;
         flex-direction: column;
         position: fixed;
-        top: 5.3rem; /* Adjust this value to manually position the menu below the header */
+        top: 4rem; /* Adjust this value to manually position the menu below the header */
         right: -100%; /* Hidden by default */
-        bottom: 6rem; /* Adjust to position above the footer */
+        bottom: 5.1rem; /* Adjust to position above the footer */
         width: 200px; /* Adjust width as needed */
-        background-color: #ff7e5f; /* Sunset color */
+        background-color: #03030376; /* Sunset color */
         color: #fff;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Add shadow for better visibility */
         padding: 1rem;
