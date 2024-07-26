@@ -262,8 +262,8 @@ nav {
     display: flex;
     flex-wrap: wrap;
     justify-content: center; /* Align images to the left */
-    gap: 1rem; /* Add space between images */
-    margin-top: 2rem; /* Add top margin for spacing */
+    gap: 1.2rem; /* Add space between images */
+    margin-top: 1rem; /* Add top margin for spacing */
 }
 
 .gallery-container a {
@@ -273,7 +273,7 @@ nav {
 
 .gallery-container img {
     width: 100%;
-    max-width: 300px;
+    max-width: 400px;
     height: auto;
     border-radius: 10px;
     transition: transform 0.3s ease;
