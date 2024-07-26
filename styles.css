@@ -247,6 +247,7 @@ nav {
     width: 100%;
     border-radius: 0 0 15px 15px; /* Rounded corners at the bottom */
 }
+
 /* Gallery Folder Styles */
 .gallery-folder {
     margin-bottom: 2rem;
@@ -264,6 +265,7 @@ nav {
     justify-content: center; /* Align images to the left */
     gap: 1.2rem; /* Add space between images */
     margin-top: 1rem; /* Add top margin for spacing */
+    padding-bottom: 5rem; /* Ensure space for the footer */
 }
 
 .gallery-container a {
