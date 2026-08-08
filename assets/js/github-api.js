@@ -181,6 +181,22 @@ async function ghUpdateTextFile(path, newTextContent, message) {
   return res.json();
 }
 
+// Delete a file from the repo (used by the delete button on album pages)
+async function ghDeleteFile(path, sha, message) {
+  const res = await fetch(`${apiBase()}/contents/${encodePath(path)}`, {
+    method: "DELETE",
+    headers: authHeaders({ "Content-Type": "application/json" }),
+    body: JSON.stringify({ message, sha, branch: SITE_CONFIG.branch })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    if (res.status === 401) throw new Error("Token invalid or expired. Please re-enter it.");
+    if (res.status === 403) throw new Error("Token doesn't have write access to this repo.");
+    throw new Error(err.message || `Delete failed (${res.status})`);
+  }
+  return res.json();
+}
+
 // Quick check that a token actually works and can write to this repo
 async function ghVerifyToken() {
   const res = await fetch(apiBase(), { headers: authHeaders() });
