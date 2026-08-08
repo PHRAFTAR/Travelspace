@@ -1,0 +1,16 @@
+[
+  {
+    "id": "baansera-park",
+    "code": "BSP",
+    "name": "Baansera Park",
+    "folder": "folder1 images",
+    "cover": "folder1 images/20240721_192515.jpg"
+  },
+  {
+    "id": "safdarjung-tomb",
+    "code": "SJT",
+    "name": "Safdarjung Tomb",
+    "folder": "folder 2 imges",
+    "cover": "folder 2 imges/IMG_20240505_175109.jpg"
+  }
+]
