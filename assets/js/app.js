@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   initNav();
   initLightbox();
+  initDeleteAuth();
   if (document.querySelector(".banner")) initHero();
   if (document.getElementById("album-grid")) renderGalleryPage();
   if (document.getElementById("contact-sheet")) renderAlbumPage();
@@ -224,15 +225,108 @@ async function renderAlbumPage() {
       const isVideo = isVideoFile(f.name);
       const tag = String(idx + 1).padStart(2, "0");
       return `
-        <div class="frame">
+        <div class="frame" data-path="${f.path}">
           ${isVideo
             ? `<video class="modal-image" src="${f.download_url}" controls preload="metadata"></video>`
             : `<img class="modal-image" src="${f.download_url}" data-full="${f.download_url}" alt="${album.name} photo ${tag}" loading="lazy">`}
           <span class="frame-idx">${tag}</span>
           ${isVideo ? '<span class="play-badge"><i class="fas fa-play"></i></span>' : ''}
+          <button class="frame-delete" type="button" data-path="${f.path}" data-name="${f.name}" title="Delete this photo">
+            <i class="fas fa-trash"></i>
+          </button>
         </div>`;
     }).join("");
   } catch (e) {
     sheet.innerHTML = '<p class="empty-state">Could not load photos from GitHub right now. Try refreshing.</p>';
   }
+}
+
+/* ---------------- Delete photos (passphrase-gated) ---------------- */
+function initDeleteAuth() {
+  const modal = document.getElementById("deleteAuthModal");
+  if (!modal) return; // only present on album.html
+
+  const input = document.getElementById("delete-pass-input");
+  const confirmBtn = document.getElementById("delete-pass-confirm");
+  const cancelBtn = document.getElementById("delete-pass-cancel");
+  const errorEl = document.getElementById("delete-pass-error");
+
+  let resolver = null;
+
+  function openModal() {
+    errorEl.textContent = "";
+    input.value = "";
+    modal.style.display = "flex";
+    setTimeout(() => input.focus(), 50);
+  }
+  function closeModal(result) {
+    modal.style.display = "none";
+    if (resolver) resolver(result);
+    resolver = null;
+  }
+
+  window.requestUnlock = function () {
+    return new Promise((resolve) => {
+      resolver = resolve;
+      openModal();
+    });
+  };
+
+  confirmBtn.addEventListener("click", async () => {
+    const pass = input.value;
+    if (!pass) {
+      errorEl.textContent = "Enter your passphrase.";
+      return;
+    }
+    errorEl.textContent = "Checking…";
+    const ok = await unlockToken(pass);
+    if (!ok) {
+      errorEl.textContent = "Wrong passphrase.";
+      return;
+    }
+    const result = await ghVerifyToken().catch(() => ({ ok: false, reason: "Could not reach GitHub" }));
+    if (!result.ok) {
+      errorEl.textContent = result.reason;
+      return;
+    }
+    closeModal(true);
+  });
+
+  cancelBtn.addEventListener("click", () => closeModal(false));
+  modal.addEventListener("click", (e) => { if (e.target === modal) closeModal(false); });
+
+  // Delegated click for delete buttons (works for dynamically rendered frames)
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest(".frame-delete");
+    if (!btn) return;
+    e.stopPropagation();
+
+    const path = btn.dataset.path;
+    const name = btn.dataset.name;
+
+    if (!hasStoredToken()) {
+      alert("Set up upload access first from the Upload page — you need that before you can delete anything.");
+      return;
+    }
+    if (!getSessionToken()) {
+      const unlocked = await window.requestUnlock();
+      if (!unlocked) return;
+    }
+    if (!confirm(`Delete "${name}"? This can't be undone.`)) return;
+
+    const frame = btn.closest(".frame");
+    frame.style.opacity = "0.4";
+    btn.disabled = true;
+
+    try {
+      const meta = await ghGetFile(path);
+      if (!meta) throw new Error("File not found (already deleted?)");
+      await ghDeleteFile(path, meta.sha, `Delete ${name} via site`);
+      frame.remove();
+    } catch (err) {
+      frame.style.opacity = "1";
+      btn.disabled = false;
+      alert("Could not delete: " + err.message);
+    }
+  });
 }
