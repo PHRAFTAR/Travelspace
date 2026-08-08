@@ -2,7 +2,7 @@
 // SITE CONFIG — edit these two lines to match your GitHub repo
 // ============================================================
 const SITE_CONFIG = {
-  githubOwner: "YOUR_GITHUB_USERNAME", // <-- change this
+  githubOwner: "PHRAFTAR/Travelspace", // <-- change this
   githubRepo: "Travelspace",           // <-- change if your repo name is different
   branch: "main",                      // <-- change if your default branch is different (e.g. "master")
   albumsFile: "assets/data/albums.json"
