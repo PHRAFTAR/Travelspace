@@ -474,6 +474,38 @@ nav { position: relative; }
   pointer-events: none;
 }
 
+.contact-sheet .frame .frame-delete {
+  position: absolute;
+  top: 0.6rem; right: 0.6rem;
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(18,17,16,0.55);
+  color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.25s ease, background 0.25s ease, transform 0.2s ease;
+  z-index: 3;
+}
+
+.contact-sheet .frame:hover .frame-delete { opacity: 1; }
+
+.contact-sheet .frame .frame-delete:hover {
+  background: var(--stamp);
+  border-color: var(--stamp);
+  transform: scale(1.08);
+}
+
+.contact-sheet .frame .frame-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (hover: none) {
+  .contact-sheet .frame .frame-delete { opacity: 1; }
+}
+
 .empty-state {
   font-family: var(--font-mono);
   font-size: 0.85rem;
