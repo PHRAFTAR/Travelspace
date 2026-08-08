@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload - TravelSpace</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="assets/js/config.js"></script>
+    <script src="assets/js/github-api.js"></script>
+    <script src="assets/js/app.js" defer></script>
+    <script src="assets/js/upload.js" defer></script>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>TravelSpace</h1>
+            <nav>
+                <div class="menu-icon"><i class="fas fa-bars"></i></div>
+                <ul class="nav-list">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="gallery.html">Gallery</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <main>
+        <section class="section">
+            <div class="section-head">
+                <div>
+                    <p class="section-eyebrow">Customs &amp; Upload</p>
+                    <h2>Add Photos</h2>
+                </div>
+                <p class="section-sub">Files go straight into your GitHub repo — no code editing needed.</p>
+            </div>
+
+            <div class="upload-card">
+                <h3><i class="fas fa-key"></i> 1. Connect GitHub</h3>
+                <p class="hint" id="token-status-hint">
+                    Status: <span class="status-pill pending" id="token-status">Checking…</span>
+                </p>
+
+                <!-- First-time setup: paste GitHub token once, choose a passphrase to lock it with -->
+                <div id="token-setup" style="display:none; flex-direction:column; gap:1rem; max-width:480px;">
+                    <p class="hint" style="margin:0;">
+                        First time here — paste your GitHub token once, then choose a short passphrase.
+                        From now on you'll only need that passphrase, not the full token.
+                    </p>
+                    <div>
+                        <label class="field-label">GitHub Token</label>
+                        <input type="password" id="setup-token" placeholder="github_pat_xxxxxxxxxxxxxxxxxxxx">
+                    </div>
+                    <div>
+                        <label class="field-label">Choose a Passphrase</label>
+                        <input type="password" id="setup-pass" placeholder="e.g. a short phrase only you know">
+                    </div>
+                    <div>
+                        <label class="field-label">Confirm Passphrase</label>
+                        <input type="password" id="setup-pass-confirm" placeholder="type it again">
+                    </div>
+                    <button class="btn" id="setup-btn" type="button" style="align-self:flex-start;">Save &amp; Lock</button>
+                </div>
+
+                <!-- Returning visit: just unlock with the passphrase -->
+                <div id="token-unlock" style="display:none; flex-direction:column; gap:1rem; max-width:480px;">
+                    <div class="token-row">
+                        <input type="password" id="unlock-pass" placeholder="Enter your passphrase">
+                        <button class="btn" id="unlock-btn" type="button">Unlock</button>
+                    </div>
+                    <button class="btn secondary" id="reset-btn" type="button" style="align-self:flex-start; font-size:0.7rem;">
+                        Use a different GitHub token / reset
+                    </button>
+                </div>
+            </div>
+
+            <div class="upload-card">
+                <h3><i class="fas fa-folder-open"></i> 2. Choose Album</h3>
+                <p class="hint">Pick an existing album, or create a brand new one on the fly.</p>
+                <label class="field-label">Album</label>
+                <select id="album-select"><option>Loading…</option></select>
+                <div id="new-album-fields" style="display:none; gap:1rem; margin-top:1rem; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:220px;">
+                        <label class="field-label">New Album Name</label>
+                        <input type="text" id="new-album-name" placeholder="e.g. Manali Trip">
+                    </div>
+                    <div>
+                        <label class="field-label">Folder in repo</label>
+                        <p style="font-family:var(--font-mono); font-size:0.85rem; margin:0.6rem 0 0;" id="new-album-slug">your-album-name</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-card">
+                <h3><i class="fas fa-images"></i> 3. Select Photos &amp; Videos</h3>
+                <div class="dropzone" id="dropzone">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    Click or drag photos/videos here (jpg, png, heic, mp4, mov, webm)
+                </div>
+                <input type="file" id="file-input" accept="image/*,video/mp4,video/quicktime,video/webm" multiple style="display:none">
+                <div class="queue-list" id="queue-list"></div>
+                <div style="margin-top:1.5rem;">
+                    <button class="btn" id="upload-btn" type="button">Upload All</button>
+                </div>
+                <div id="upload-log" style="margin-top:1rem; font-size:0.9rem;"></div>
+            </div>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 TravelSpace. All rights reserved.</p>
+        <div class="social-icons">
+            <a href="https://www.facebook.com/priyanshu.deepu.5?mibextid=qi2Omg&rdid=Tq0yEKBLqfZ9Apvh&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F4V6339T38sKLmu1P%2F%3Fmibextid%3Dqi2Omg"><i class="fab fa-facebook-f"></i></a>
+            <a href="https://www.youtube.com/@ph_raftar"><i class="fab fa-youtube"></i></a>
+            <a href="https://www.instagram.com/ph_raftar/"><i class="fab fa-instagram"></i></a>
+            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        </div>
+    </footer>
+</body>
+</html>
