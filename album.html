@@ -53,5 +53,18 @@
         <span class="close">&times;</span>
         <img class="modal-content" id="img01">
     </div>
+
+    <div id="deleteAuthModal" class="modal">
+        <div class="upload-card" style="max-width:380px; margin:0; width:90%;">
+            <h3><i class="fas fa-lock"></i> Unlock to Delete</h3>
+            <p class="hint">Enter your passphrase to confirm this delete.</p>
+            <input type="password" id="delete-pass-input" placeholder="Passphrase" style="margin-bottom:1rem;">
+            <div style="display:flex; gap:0.6rem;">
+                <button class="btn" id="delete-pass-confirm" type="button">Unlock</button>
+                <button class="btn secondary" id="delete-pass-cancel" type="button">Cancel</button>
+            </div>
+            <p id="delete-pass-error" style="color:var(--stamp); font-size:0.8rem; margin:0.8rem 0 0;"></p>
+        </div>
+    </div>
 </body>
 </html>
