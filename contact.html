@@ -35,7 +35,7 @@
                     <p class="section-eyebrow">Send a Postcard</p>
                     <h2 style="font-family:var(--font-display); font-style:italic; font-size:clamp(1.9rem,4vw,3rem); margin:0 0 1.2rem; border-bottom:2px solid var(--orange); display:inline-block; padding-bottom:0.4rem;">Let's <em style="color:var(--orange);">Connect</em></h2>
                     <p style="color:rgba(var(--page-fg-rgb),0.75); max-width:42ch; margin:1rem 0 2rem;">Have a question, a story to share, or just want to say hello? I'd love to hear from you.</p>
-                    <form action="https://docs.google.com/forms/d/e/1FAIpQLScuns5Qlz-AgSZz7XuW01nF38SbXaZa9MrjGgtJQpZF29zoBg/formResponse" method="post" target="_blank">
+                    <form id="contact-form" action="https://docs.google.com/forms/d/e/1FAIpQLScuns5Qlz-AgSZz7XuW01nF38SbXaZa9MrjGgtJQpZF29zoBg/formResponse" method="post">
                         <div class="icon-input">
                             <i class="fas fa-user"></i>
                             <input type="text" name="entry.YOUR_NAME_FIELD_ID" placeholder="Your Name" required>
@@ -48,8 +48,13 @@
                             <i class="fas fa-pen"></i>
                             <textarea name="entry.YOUR_MESSAGE_FIELD_ID" placeholder="Your Message" required></textarea>
                         </div>
-                        <button class="btn" type="submit">Send Message <i class="fas fa-paper-plane"></i></button>
+                        <button class="btn" type="submit" id="contact-submit-btn">Send Message <i class="fas fa-paper-plane"></i></button>
                     </form>
+                    <div class="postcard-success" id="postcard-success">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>Postcard Sent ✓</h3>
+                        <p>Thanks for reaching out — I'll get back to you soon.</p>
+                    </div>
                 </div>
                 <div class="contact-photo-wrap">
                     <div class="contact-photo">
