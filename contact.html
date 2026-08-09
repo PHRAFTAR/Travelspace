@@ -29,28 +29,51 @@
     </header>
     <main>
         <section class="section">
-            <div class="section-head">
+            <div class="contact-grid">
                 <div>
                     <p class="section-eyebrow">Send a Postcard</p>
-                    <h2>Contact</h2>
+                    <h2 style="font-family:var(--font-display); font-style:italic; font-size:clamp(1.9rem,4vw,3rem); margin:0 0 1.2rem; border-bottom:2px solid var(--orange); display:inline-block; padding-bottom:0.4rem;">Let's <em style="color:var(--orange);">Connect</em></h2>
+                    <p style="color:rgba(var(--page-fg-rgb),0.75); max-width:42ch; margin:1rem 0 2rem;">Have a question, a story to share, or just want to say hello? I'd love to hear from you.</p>
+                    <form action="https://docs.google.com/forms/d/e/1FAIpQLScuns5Qlz-AgSZz7XuW01nF38SbXaZa9MrjGgtJQpZF29zoBg/formResponse" method="post" target="_blank">
+                        <div class="icon-input">
+                            <i class="fas fa-user"></i>
+                            <input type="text" name="entry.YOUR_NAME_FIELD_ID" placeholder="Your Name" required>
+                        </div>
+                        <div class="icon-input">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" name="entry.YOUR_EMAIL_FIELD_ID" placeholder="Your Email" required>
+                        </div>
+                        <div class="icon-input">
+                            <i class="fas fa-pen"></i>
+                            <textarea name="entry.YOUR_MESSAGE_FIELD_ID" placeholder="Your Message" required></textarea>
+                        </div>
+                        <button class="btn" type="submit">Send Message <i class="fas fa-paper-plane"></i></button>
+                    </form>
+                </div>
+                <div class="contact-photo-wrap">
+                    <div class="contact-photo">
+                        <img id="contact-photo" src="" alt="Priyanshu">
+                    </div>
+                    <div class="postcard-note">
+                        <i class="fas fa-plane"></i>
+                        Let's connect — I'd love to hear <span style="color:var(--orange);">from you!</span>
+                    </div>
                 </div>
             </div>
-            <form action="https://docs.google.com/forms/d/e/1FAIpQLScuns5Qlz-AgSZz7XuW01nF38SbXaZa9MrjGgtJQpZF29zoBg/formResponse" method="post" target="_blank">
-                <input type="text" name="entry.YOUR_NAME_FIELD_ID" placeholder="Your Name" required>
-                <input type="email" name="entry.YOUR_EMAIL_FIELD_ID" placeholder="Your Email" required>
-                <textarea name="entry.YOUR_MESSAGE_FIELD_ID" placeholder="Your Message" required></textarea>
-                <button class="btn" type="submit">Send Message</button>
-            </form>
         </section>
     </main>
     <footer>
-        <p>&copy; 2024 TravelSpace. All rights reserved.</p>
-        <div class="social-icons">
-            <a href="https://www.facebook.com/priyanshu.deepu.5?mibextid=qi2Omg&rdid=Tq0yEKBLqfZ9Apvh&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F4V6339T38sKLmu1P%2F%3Fmibextid%3Dqi2Omg"><i class="fab fa-facebook-f"></i></a>
-            <a href="https://www.youtube.com/@ph_raftar"><i class="fab fa-youtube"></i></a>
-            <a href="https://www.instagram.com/ph_raftar/"><i class="fab fa-instagram"></i></a>
-            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        <div class="footer-inner">
+            <div class="footer-stamp"><i class="fas fa-plane"></i></div>
+            <p class="footer-tagline"><i class="fas fa-plane"></i> Collect moments. Not things.</p>
+            <div class="social-icons">
+                <a href="https://www.facebook.com/priyanshu.deepu.5?mibextid=qi2Omg&rdid=Tq0yEKBLqfZ9Apvh&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F4V6339T38sKLmu1P%2F%3Fmibextid%3Dqi2Omg"><i class="fab fa-facebook-f"></i></a>
+                <a href="https://www.youtube.com/@ph_raftar"><i class="fab fa-youtube"></i></a>
+                <a href="https://www.instagram.com/ph_raftar/"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-linkedin-in"></i></a>
+            </div>
         </div>
+        <p class="footer-copy">&copy; 2024 TravelSpace. All rights reserved.</p>
     </footer>
 </body>
 </html>
