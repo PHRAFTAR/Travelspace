@@ -3,7 +3,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initNav();
   initLightbox();
   initDeleteAuth();
-  if (document.querySelector(".banner")) initHero();
+  if (document.getElementById("hero-image-panel")) initHero();
+  if (document.getElementById("about-photo")) initAboutPhoto();
+  if (document.getElementById("contact-photo")) initContactPhoto();
   if (document.getElementById("album-grid")) renderGalleryPage();
   if (document.getElementById("contact-sheet")) renderAlbumPage();
 });
@@ -36,6 +38,31 @@ function initTheme() {
     applyTheme(next);
     localStorage.setItem(KEY, next);
   });
+}
+
+async function initAboutPhoto() {
+  const img = document.getElementById("about-photo");
+  try {
+    const albums = await loadAlbums();
+    if (albums.length && albums[0].cover) {
+      img.src = encodeURI(albums[0].cover);
+    }
+  } catch (e) {
+    console.warn("Could not load photo for about page:", e);
+  }
+}
+
+async function initContactPhoto() {
+  const img = document.getElementById("contact-photo");
+  try {
+    const albums = await loadAlbums();
+    const pick = albums[1] || albums[0];
+    if (pick && pick.cover) {
+      img.src = encodeURI(pick.cover);
+    }
+  } catch (e) {
+    console.warn("Could not load photo for contact page:", e);
+  }
 }
 
 function shuffleArray(arr) {
@@ -103,48 +130,19 @@ function initLightbox() {
 
 /* ---------------- Homepage hero ---------------- */
 async function initHero() {
-  const banner = document.querySelector(".banner");
-  const bannerText = document.querySelector(".banner-text");
-
-  // Typing effect
-  if (bannerText) {
-    const text = "Welcome to TravelSpace";
-    let index = 0;
-    let typing = true;
-    (function tick() {
-      if (typing) {
-        if (index < text.length) {
-          bannerText.innerHTML = text.slice(0, index + 1) + '<span class="cursor"></span>';
-          index++;
-          setTimeout(tick, 120);
-        } else {
-          typing = false;
-          setTimeout(tick, 1400);
-        }
-      } else {
-        if (index > 0) {
-          bannerText.innerHTML = text.slice(0, index - 1) + '<span class="cursor"></span>';
-          index--;
-          setTimeout(tick, 70);
-        } else {
-          typing = true;
-          setTimeout(tick, 500);
-        }
-      }
-    })();
-  }
+  const panel = document.getElementById("hero-image-panel");
 
   // Slideshow background pulled from album covers (random order each visit) + a live featured strip
   try {
     const albums = await loadAlbums();
     const covers = shuffleArray(albums.map(a => a.cover).filter(Boolean));
-    if (covers.length) {
+    if (panel && covers.length) {
       let i = 0;
-      banner.style.backgroundImage = `url('${encodeURI(covers[i])}')`;
+      panel.style.backgroundImage = `url('${encodeURI(covers[i])}')`;
       if (covers.length > 1) {
         setInterval(() => {
           i = (i + 1) % covers.length;
-          banner.style.backgroundImage = `url('${encodeURI(covers[i])}')`;
+          panel.style.backgroundImage = `url('${encodeURI(covers[i])}')`;
         }, 4000);
       }
     }
@@ -211,7 +209,10 @@ async function renderGalleryPage() {
         </div>
         <div class="bp-stub">
           <h3 class="bp-name">${album.name}</h3>
-          <div class="bp-meta"><span>${count} ITEMS</span><span>GATE ${String(idx + 1).padStart(2, "0")}</span></div>
+          <div class="bp-meta">
+            <span class="bp-count"><i class="fas fa-map-marker-alt"></i> ${count} ITEMS</span>
+            <span class="bp-arrow"><i class="fas fa-arrow-right"></i></span>
+          </div>
         </div>
       </a>`;
   }));
