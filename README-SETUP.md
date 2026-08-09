@@ -1,71 +1,75 @@
-# TravelSpace Upgrade — Setup Guide
+# TravelSpace — Setup Guide (current)
 
-## 1. In-repo files ye badle/naye hain
-Replace these in your GitHub repo with the versions in this zip:
-- `index.html`
-- `gallery.html`
-- `about.html`
-- `contact.html`
-- `styles.css`
+## What this site is
+A personal travel photo/video journal, hosted free on GitHub Pages. No backend —
+everything (albums, folders, site photos) is stored as JSON files in this repo,
+and photos are uploaded straight from the site into your GitHub repo via the
+GitHub API.
 
-New files (add these):
-- `album.html`
-- `upload.html`
-- `assets/js/config.js`
-- `assets/js/github-api.js`
-- `assets/js/app.js`
-- `assets/js/upload.js`
-- `assets/data/albums.json`
+Structure: **Gallery → Folders → Albums → Photos**
 
-**Delete these — no longer needed** (replaced by `album.html` + live GitHub listing):
-- `folder1.html`
-- `folder2.html`
-- `folder3.html`
-- `mobile-nav.js`
-- `banner.js`
+## File overview
+- `index.html`, `gallery.html`, `folder.html`, `album.html`, `about.html`, `contact.html`, `upload.html` — pages
+- `styles.css` — all styling
+- `assets/js/config.js` — your GitHub username/repo + data file paths
+- `assets/js/github-api.js` — talks to the GitHub API (list/upload/delete files)
+- `assets/js/app.js` — renders every page, theme toggle, animations, cursor, etc.
+- `assets/js/upload.js` — the upload/admin page logic (login, create folders/albums, site photos)
+- `assets/data/folders.json` — your folder categories (e.g. "City & Heritage")
+- `assets/data/albums.json` — your albums, each linked to a folder via `folderId`
+- `assets/data/site-settings.json` — created automatically once you pick homepage/about/contact photos
 
-Your image folders (`folder1 images/`, `folder 2 imges/`) stay exactly where they are — don't move or rename them.
-
-## 2. Ek zaroori edit: `assets/js/config.js`
-Open `assets/js/config.js` and set your actual GitHub username:
+## 1. One-time edit: `assets/js/config.js`
 ```js
 const SITE_CONFIG = {
-  githubOwner: "your-actual-github-username", // <-- edit this
-  githubRepo: "Travelspace",                  // <-- edit if your repo name is different
-  branch: "main",                              // <-- edit if your default branch is "master"
+  githubOwner: "PHRAFTAR",   // <-- your GitHub username
+  githubRepo: "Travelspace", // <-- your repo name
+  branch: "main",
   ...
 };
 ```
-Without this, nothing will load — the site doesn't know which repo to talk to.
+If this is wrong you'll see "Repo not reachable" on the upload page.
 
-## 3. Upload feature ke liye GitHub token banao
-1. GitHub → click your profile photo → **Settings**
-2. Left sidebar bottom → **Developer settings**
-3. **Personal access tokens → Fine-grained tokens → Generate new token**
-4. **Repository access**: "Only select repositories" → choose your Travelspace repo
-5. **Permissions → Repository permissions → Contents → Read and write**
-6. Generate, copy the token (starts with `github_pat_...`)
+## 2. Logging in to upload/manage
+Go to `upload.html` on your live site.
 
-Go to `upload.html` on your live site — **first time only**, paste the token in and choose your own
-short passphrase (like a PIN), then click **Save & Lock**. From then on, you only need that
-passphrase to unlock uploads — you won't need to paste the full token again on that browser.
+**First time:**
+1. Create a GitHub token: GitHub → Settings → Developer settings → Personal access
+   tokens → Fine-grained → select this repo only → Permissions → Contents →
+   **Read and write**.
+2. On `upload.html`, enter Username `Priyanshu.Sharma`, paste the token, and choose
+   your own password.
+3. Click **Save & Lock**.
 
-Under the hood: the passphrase encrypts the token (AES-256) before it's saved in that browser's
-local storage. The real token is never stored in plain text, and it's never written into any file
-that gets committed to your repo. Because your repo is public, still don't paste the raw token or
-your passphrase anywhere else (comments, screenshots, etc.) — anyone with the token could push to
-your repo. If you ever want to switch to a different token, hit "Use a different GitHub token / reset"
-on the upload page.
+**Every time after:** just enter the username + your password to log in. The real
+token is encrypted (AES-256) in that browser's storage — it's never written into
+any file that gets committed, and it's never compared in plain text anywhere in
+the code (so no one can read it from "View Source").
 
-## 4. Kaise use karega
-- **Gallery** page ab live hai — jo bhi photo GitHub folder mein hai wahi dikhegi, koi HTML edit nahi.
-- **Upload page** (`upload.html`) se: existing album choose karo ya naya album banao, photos/videos
-  drag-drop karo, "Upload All" dabao. Direct commit ho jayega tumhare repo mein.
-- Naya album banane par `assets/data/albums.json` khud-ba-khud update ho jaata hai — gallery pe
-  turant naya "boarding pass" card dikhega.
-- GitHub Pages har commit ke baad khud rebuild karta hai (~30-60 sec), phir refresh karke dekh lena.
+Since the repo is public, don't screenshot or share your token/password anywhere.
+
+## 3. Adding photos
+On `upload.html`, once logged in:
+1. **Choose Category Folder** — pick an existing one or create a new one (e.g. "Mountains").
+2. **Choose Album** — pick an existing album in that folder, or create a new one
+   (with location + date, shown on the folder page).
+3. **Select Photos & Videos** — drag/drop or click to browse, then **Upload All**.
+
+New folders/albums are written straight into `folders.json`/`albums.json`, and
+the site picks them up automatically — no code editing needed.
+
+## 4. Deleting a photo
+Open any album, hover a photo (or just tap on mobile) → red trash icon → confirm.
+You'll be asked to log in if you haven't already this session.
+
+## 5. Choosing homepage / About / Contact photos
+Still on `upload.html`, after logging in, scroll to **Site Photos** — pick any
+number of photos for the homepage hero, and one each for About and Contact.
+Click **Save Site Photos**.
 
 ## Notes
-- Unauthenticated visitors (jo bhi tumhari site dekhta hai) sirf gallery dekh sakte hain, upload nahi
-  kar sakte — unke paas token nahi hai.
-- Agar GitHub API rate limit hit ho (public/anonymous browsing pe 60 requests/hour), thoda wait karke refresh karna.
+- Anonymous visitors can browse everything but can't upload/delete/manage —
+  they have no token.
+- GitHub API rate-limits anonymous browsing to 60 requests/hour; if a page fails
+  to load photos, wait a bit and refresh.
+- GitHub Pages rebuilds ~30–60 seconds after any commit — refresh after that.

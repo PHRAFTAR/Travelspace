@@ -6,23 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Album - TravelSpace</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
     <script src="assets/js/config.js"></script>
     <script src="assets/js/github-api.js"></script>
     <script src="assets/js/app.js" defer></script>
 </head>
 <body>
+    <div class="film-grain-overlay" aria-hidden="true"></div>
     <header>
         <div class="container">
             <h1>TravelSpace</h1>
             <nav>
-                <div class="menu-icon"><i class="fas fa-bars"></i></div>
+                <div class="menu-icon" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></div>
                 <ul class="nav-list">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="gallery.html">Gallery</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                    <li><a href="upload.html" class="theme-toggle" title="Upload / Manage"><i class="fas fa-cloud-upload-alt"></i></a></li>
+                    <li><a href="index.html"><span class="nav-num">01</span> Home</a></li>
+                    <li><a href="gallery.html"><span class="nav-num">02</span> Gallery</a></li>
+                    <li><a href="about.html"><span class="nav-num">03</span> About</a></li>
+                    <li><a href="contact.html"><span class="nav-num">04</span> Contact</a></li>
+                    <li><a href="upload.html" class="nav-upload-link">Upload</a></li>
                     <li><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme"><i class="fas fa-sun"></i></button></li>
                 </ul>
             </nav>
@@ -76,5 +78,12 @@
             <p id="delete-pass-error" style="color:var(--stamp); font-size:0.8rem; margin:0.8rem 0 0;"></p>
         </div>
     </div>
+    <nav class="mobile-tab-bar">
+        <a href="index.html"><i class="fas fa-house"></i><span>Home</span></a>
+        <a href="gallery.html"><i class="fas fa-grip"></i><span>Gallery</span></a>
+        <a href="about.html"><i class="fas fa-user"></i><span>About</span></a>
+        <a href="contact.html"><i class="fas fa-envelope"></i><span>Contact</span></a>
+        <a href="upload.html"><i class="fas fa-cloud-arrow-up"></i><span>Upload</span></a>
+    </nav>
 </body>
 </html>

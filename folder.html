@@ -4,7 +4,7 @@
     <script>(function(){var t=localStorage.getItem('ts_theme');if(t==='light')document.documentElement.setAttribute('data-theme','light');})();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TravelSpace - Contact</title>
+    <title>Folder - TravelSpace</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
@@ -31,42 +31,32 @@
         </div>
     </header>
     <main>
+        <section class="folder-banner" id="folder-banner">
+            <div class="section folder-banner-inner reveal">
+                <p class="breadcrumb">
+                    <a href="gallery.html">Gallery</a> <i class="fas fa-chevron-right"></i> <span id="folder-crumb">Loading…</span>
+                </p>
+                <h2 id="folder-title">Loading…</h2>
+                <p class="folder-desc" id="folder-desc"></p>
+                <div class="folder-stats" id="folder-stats"></div>
+            </div>
+        </section>
+
         <section class="section">
-            <div class="contact-grid reveal">
-                <div>
-                    <p class="section-eyebrow">Send a Postcard</p>
-                    <h2 style="font-family:var(--font-display); font-style:italic; font-size:clamp(1.9rem,4vw,3rem); margin:0 0 1.2rem; border-bottom:2px solid var(--orange); display:inline-block; padding-bottom:0.4rem;">Let's <em style="color:var(--orange);">Connect</em></h2>
-                    <p style="color:rgba(var(--page-fg-rgb),0.75); max-width:42ch; margin:1rem 0 2rem;">Have a question, a story to share, or just want to say hello? I'd love to hear from you.</p>
-                    <form id="contact-form" action="https://docs.google.com/forms/d/e/1FAIpQLScuns5Qlz-AgSZz7XuW01nF38SbXaZa9MrjGgtJQpZF29zoBg/formResponse" method="post">
-                        <div class="icon-input">
-                            <i class="fas fa-user"></i>
-                            <input type="text" name="entry.YOUR_NAME_FIELD_ID" placeholder="Your Name" required>
-                        </div>
-                        <div class="icon-input">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" name="entry.YOUR_EMAIL_FIELD_ID" placeholder="Your Email" required>
-                        </div>
-                        <div class="icon-input">
-                            <i class="fas fa-pen"></i>
-                            <textarea name="entry.YOUR_MESSAGE_FIELD_ID" placeholder="Your Message" required></textarea>
-                        </div>
-                        <button class="btn" type="submit" id="contact-submit-btn">Send Message <i class="fas fa-paper-plane"></i></button>
-                    </form>
-                    <div class="postcard-success" id="postcard-success">
-                        <i class="fas fa-check-circle"></i>
-                        <h3>Postcard Sent ✓</h3>
-                        <p>Thanks for reaching out — I'll get back to you soon.</p>
-                    </div>
+            <div class="view-toolbar reveal">
+                <div class="view-toggle">
+                    <button class="view-btn active" data-view="grid" id="grid-view-btn"><i class="fas fa-grip"></i> Grid View</button>
+                    <button class="view-btn" data-view="list" id="list-view-btn"><i class="fas fa-list"></i> List View</button>
                 </div>
-                <div class="contact-photo-wrap">
-                    <div class="contact-photo">
-                        <img id="contact-photo" src="" alt="Priyanshu">
-                    </div>
-                    <div class="postcard-note">
-                        <i class="fas fa-plane"></i>
-                        Let's connect — I'd love to hear <span style="color:var(--orange);">from you!</span>
-                    </div>
-                </div>
+                <select class="sort-select" id="sort-select">
+                    <option value="latest">Sort: Latest</option>
+                    <option value="oldest">Sort: Oldest</option>
+                    <option value="az">Sort: A–Z</option>
+                </select>
+            </div>
+
+            <div class="album-grid" id="album-grid">
+                <p class="empty-state">Loading albums…</p>
             </div>
         </section>
     </main>

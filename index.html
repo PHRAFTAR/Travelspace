@@ -6,23 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TravelSpace - Home</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
     <script src="assets/js/config.js"></script>
     <script src="assets/js/github-api.js"></script>
     <script src="assets/js/app.js" defer></script>
 </head>
 <body>
+    <div class="film-grain-overlay" aria-hidden="true"></div>
     <header>
         <div class="container">
             <h1>TravelSpace</h1>
             <nav>
-                <div class="menu-icon"><i class="fas fa-bars"></i></div>
+                <div class="menu-icon" aria-label="Toggle Navigation"><i class="fas fa-bars"></i></div>
                 <ul class="nav-list">
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="gallery.html">Gallery</a></li>
-                    <li><a href="about.html">About</a></li>
-                    <li><a href="contact.html">Contact</a></li>
-                    <li><a href="upload.html" class="theme-toggle" title="Upload / Manage"><i class="fas fa-cloud-upload-alt"></i></a></li>
+                    <li><a href="index.html"><span class="nav-num">01</span> Home</a></li>
+                    <li><a href="gallery.html"><span class="nav-num">02</span> Gallery</a></li>
+                    <li><a href="about.html"><span class="nav-num">03</span> About</a></li>
+                    <li><a href="contact.html"><span class="nav-num">04</span> Contact</a></li>
+                    <li><a href="upload.html" class="nav-upload-link">Upload</a></li>
                     <li><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Toggle light/dark theme"><i class="fas fa-sun"></i></button></li>
                 </ul>
             </nav>
@@ -31,17 +33,39 @@
     <main>
         <section class="hero-split">
             <div class="hero-text-panel">
-                <p class="banner-eyebrow">A Personal Travel Journal</p>
-                <h2 class="banner-text">Explore. Experience. <em>Remember.</em></h2>
+                <div class="hero-badge-row">
+                    <p class="banner-eyebrow"><i class="fas fa-location-dot"></i> A Personal Travel Journal</p>
+                    <span class="hero-coords">28°35'N 77°12'E</span>
+                </div>
+                <h2 class="banner-text">
+                    <span class="hero-word word-1">Explore.</span>
+                    <span class="hero-word word-2">Experience.</span>
+                    <span class="hero-word word-3"><em>Remember.</em></span>
+                </h2>
                 <p class="hero-sub">Real trips, real moments, real me. Captured as it happened — no filters, no pretence.</p>
-                <a href="gallery.html" class="btn hero-cta">View Gallery <i class="fas fa-arrow-up-right-from-square"></i></a>
+                <div class="hero-actions">
+                    <a href="gallery.html" class="btn hero-cta">View Gallery <i class="fas fa-arrow-right"></i></a>
+                    <a href="about.html" class="hero-secondary-link"><i class="fas fa-compass"></i> Read Passport</a>
+                </div>
                 <div class="hero-stamp-row">
                     <div class="mini-stamp"><i class="fas fa-plane"></i></div>
                     <span>Logged since <b>2024</b></span>
                 </div>
             </div>
             <div class="hero-image-panel" id="hero-image-panel">
-                <div class="hero-postmark"><i class="fas fa-plane"></i></div>
+                <div class="hero-photo-layer" id="hero-photo-layer"></div>
+                <svg class="flight-route" viewBox="0 0 480 200" preserveAspectRatio="none" aria-hidden="true">
+                    <path id="flightPath" d="M 10,140 C 130,20 300,10 460,90" fill="none" stroke="rgba(243,238,223,0.35)" stroke-width="1.5" stroke-dasharray="4 6"/>
+                </svg>
+                <div class="flight-plane"><i class="fas fa-plane"></i></div>
+                <svg class="hero-postmark-svg" viewBox="0 0 100 100">
+                    <defs><path id="postmarkCircle" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"/></defs>
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(243,238,223,0.5)" stroke-width="1"/>
+                    <text font-size="7.5" letter-spacing="1.5" fill="rgba(243,238,223,0.7)">
+                        <textPath href="#postmarkCircle" startOffset="0%">TRAVELSPACE • EST 2024 • </textPath>
+                    </text>
+                    <text x="50" y="55" font-size="16" text-anchor="middle" fill="var(--orange)" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf072;</text>
+                </svg>
             </div>
         </section>
 
@@ -57,9 +81,40 @@
                 <div class="featured-content" id="featured-strip">
                     <p class="empty-state">Loading featured shots…</p>
                 </div>
+                <div class="carousel-dots" id="featured-dots"></div>
+            </div>
+        </section>
+
+        <section class="quote-strip reveal">
+            <div class="section quote-inner">
+                <div class="ticket-stub">
+                    <div class="ticket-row"><span>ROUTE</span><span>ANYWHERE → HOME</span></div>
+                    <div class="ticket-row"><span>PASSENGER</span><span>PRIYANSHU</span></div>
+                    <i class="fas fa-plane ticket-icon"></i>
+                </div>
+                <div class="quote-text">
+                    <p>"Collect moments.<br>Not things."</p>
+                    <span>That's the real journey.</span>
+                </div>
+                <svg class="hero-postmark-svg quote-postmark" viewBox="0 0 100 100">
+                    <defs><path id="quoteCircle" d="M 50,50 m -38,0 a 38,38 0 1,1 76,0 a 38,38 0 1,1 -76,0"/></defs>
+                    <circle cx="50" cy="50" r="38" fill="none" stroke="rgba(243,238,223,0.5)" stroke-width="1"/>
+                    <text font-size="7.5" letter-spacing="1.5" fill="rgba(243,238,223,0.7)">
+                        <textPath href="#quoteCircle" startOffset="0%">FOR ALL THOSE WHO WANDER • </textPath>
+                    </text>
+                    <text x="50" y="55" font-size="16" text-anchor="middle" fill="var(--orange)" font-family="'Font Awesome 6 Free'" font-weight="900">&#xf072;</text>
+                </svg>
             </div>
         </section>
     </main>
+
+    <nav class="mobile-tab-bar">
+        <a href="index.html"><i class="fas fa-house"></i><span>Home</span></a>
+        <a href="gallery.html"><i class="fas fa-grip"></i><span>Gallery</span></a>
+        <a href="about.html"><i class="fas fa-user"></i><span>About</span></a>
+        <a href="contact.html"><i class="fas fa-envelope"></i><span>Contact</span></a>
+        <a href="upload.html"><i class="fas fa-cloud-arrow-up"></i><span>Upload</span></a>
+    </nav>
     <footer>
         <div class="footer-inner">
             <div class="footer-stamp"><i class="fas fa-plane"></i></div>
