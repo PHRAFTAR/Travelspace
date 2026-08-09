@@ -1,4 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
+  initTheme();
   initNav();
   initLightbox();
   initDeleteAuth();
@@ -6,6 +7,45 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("album-grid")) renderGalleryPage();
   if (document.getElementById("contact-sheet")) renderAlbumPage();
 });
+
+/* ---------------- Theme toggle (dark / light) ---------------- */
+function initTheme() {
+  const KEY = "ts_theme";
+  const root = document.documentElement;
+
+  function updateIcons(theme) {
+    document.querySelectorAll("#theme-toggle i").forEach(icon => {
+      icon.className = theme === "light" ? "fas fa-moon" : "fas fa-sun";
+    });
+  }
+
+  function applyTheme(theme) {
+    if (theme === "light") root.setAttribute("data-theme", "light");
+    else root.removeAttribute("data-theme");
+    updateIcons(theme);
+  }
+
+  const saved = localStorage.getItem(KEY);
+  applyTheme(saved === "light" ? "light" : "dark");
+
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#theme-toggle");
+    if (!btn) return;
+    const current = root.getAttribute("data-theme") === "light" ? "light" : "dark";
+    const next = current === "light" ? "dark" : "light";
+    applyTheme(next);
+    localStorage.setItem(KEY, next);
+  });
+}
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
 
 /* ---------------- Mobile nav ---------------- */
 function initNav() {
@@ -94,13 +134,13 @@ async function initHero() {
     })();
   }
 
-  // Slideshow background pulled from album covers + a live featured strip
+  // Slideshow background pulled from album covers (random order each visit) + a live featured strip
   try {
     const albums = await loadAlbums();
-    const covers = albums.map(a => a.cover).filter(Boolean);
+    const covers = shuffleArray(albums.map(a => a.cover).filter(Boolean));
     if (covers.length) {
       let i = 0;
-      banner.style.backgroundImage = `url('${encodeURI(covers[0])}')`;
+      banner.style.backgroundImage = `url('${encodeURI(covers[i])}')`;
       if (covers.length > 1) {
         setInterval(() => {
           i = (i + 1) % covers.length;
