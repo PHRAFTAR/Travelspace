@@ -9,7 +9,10 @@ document.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("upload-btn").addEventListener("click", startUpload);
 });
 
-/* ---------------- Token: passphrase-locked setup / unlock ---------------- */
+const ALLOWED_USERNAME = "Priyanshu.Sharma";
+const USERNAME_KEY = "ts_username";
+
+/* ---------------- Login: username + password-locked GitHub token ---------------- */
 function initTokenUI() {
   const pill = document.getElementById("token-status");
   const setupBlock = document.getElementById("token-setup");
@@ -24,19 +27,23 @@ function initTokenUI() {
     setupBlock.style.display = "none";
     unlockBlock.style.display = "flex";
     setPill(pill, "pending", message || "Locked");
+    const savedUser = localStorage.getItem(USERNAME_KEY);
+    if (savedUser) document.getElementById("unlock-username").value = savedUser;
   }
 
   if (hasStoredToken()) showUnlock(); else showSetup();
 
   // First-time setup
   document.getElementById("setup-btn").addEventListener("click", async () => {
+    const username = document.getElementById("setup-username").value.trim();
     const token = document.getElementById("setup-token").value.trim();
     const pass1 = document.getElementById("setup-pass").value;
     const pass2 = document.getElementById("setup-pass-confirm").value;
 
+    if (username !== ALLOWED_USERNAME) return setPill(pill, "bad", "Unknown username");
     if (!token) return setPill(pill, "bad", "Paste your GitHub token first");
-    if (pass1.length < 4) return setPill(pill, "bad", "Passphrase should be at least 4 characters");
-    if (pass1 !== pass2) return setPill(pill, "bad", "Passphrases don't match");
+    if (pass1.length < 4) return setPill(pill, "bad", "Password should be at least 4 characters");
+    if (pass1 !== pass2) return setPill(pill, "bad", "Passwords don't match");
 
     setPill(pill, "pending", "Checking token with GitHub…");
     sessionToken = token; // temporarily, just to verify it works
@@ -52,26 +59,35 @@ function initTokenUI() {
     }
 
     await setupToken(token, pass1);
+    localStorage.setItem(USERNAME_KEY, username);
     document.getElementById("setup-token").value = "";
     document.getElementById("setup-pass").value = "";
     document.getElementById("setup-pass-confirm").value = "";
-    setPill(pill, "ok", "Connected · locked with your passphrase");
+    setPill(pill, "ok", "Logged in — you can now upload");
+    initSitePhotos();
   });
 
-  // Returning visit: unlock with passphrase
+  // Returning visit: login with username + password
   document.getElementById("unlock-btn").addEventListener("click", async () => {
+    const username = document.getElementById("unlock-username").value.trim();
     const pass = document.getElementById("unlock-pass").value;
-    if (!pass) return setPill(pill, "bad", "Enter your passphrase");
+    const savedUser = localStorage.getItem(USERNAME_KEY);
 
-    setPill(pill, "pending", "Unlocking…");
+    if (username !== ALLOWED_USERNAME || (savedUser && username !== savedUser)) {
+      return setPill(pill, "bad", "Unknown username");
+    }
+    if (!pass) return setPill(pill, "bad", "Enter your password");
+
+    setPill(pill, "pending", "Logging in…");
     const unlocked = await unlockToken(pass);
-    if (!unlocked) return setPill(pill, "bad", "Wrong passphrase");
+    if (!unlocked) return setPill(pill, "bad", "Wrong password");
 
     try {
       const result = await ghVerifyToken();
       if (result.ok) {
         document.getElementById("unlock-pass").value = "";
-        setPill(pill, "ok", "Unlocked · can upload");
+        setPill(pill, "ok", "Logged in — you can now upload");
+        initSitePhotos();
       } else {
         setPill(pill, "bad", result.reason);
       }
@@ -83,6 +99,7 @@ function initTokenUI() {
   // Reset: forget the stored (encrypted) token entirely
   document.getElementById("reset-btn").addEventListener("click", () => {
     clearStoredToken();
+    localStorage.removeItem(USERNAME_KEY);
     document.getElementById("unlock-pass").value = "";
     showSetup("Token cleared — set up again");
   });
@@ -250,4 +267,124 @@ async function startUpload() {
   btn.textContent = "Upload All";
   queuedFiles = queuedFiles.filter(f => f.status !== "ok");
   renderQueue();
+}
+
+/* ---------------- Site Photos: pick hero / about / contact images ---------------- */
+let allPhotosCache = null;
+let selectedHero = new Set();
+let selectedAbout = null;
+let selectedContact = null;
+
+async function loadAllPhotosForPicker() {
+  if (allPhotosCache) return allPhotosCache;
+  const albums = albumsCache.length ? albumsCache : await loadAlbums();
+  const all = [];
+  for (const album of albums) {
+    try {
+      const files = await ghListFolder(album.folder);
+      files
+        .filter(f => f.type === "file" && isMediaFile(f.name) && !isVideoFile(f.name))
+        .forEach(f => all.push({ path: f.path, url: f.download_url }));
+    } catch (e) { /* skip album on error */ }
+  }
+  allPhotosCache = all;
+  return all;
+}
+
+async function initSitePhotos() {
+  const loading = document.getElementById("site-photos-loading");
+  const panel = document.getElementById("site-photos-panel");
+  if (!loading || !panel) return;
+
+  loading.textContent = "Loading photos…";
+
+  let settings = {};
+  try {
+    const meta = await ghGetFile(SITE_CONFIG.siteSettingsFile);
+    if (meta && meta.content) {
+      settings = JSON.parse(decodeURIComponent(escape(atob(meta.content.replace(/\n/g, "")))));
+    }
+  } catch (e) { /* no settings yet, that's fine */ }
+
+  selectedHero = new Set(settings.heroImages || []);
+  selectedAbout = settings.aboutImage || null;
+  selectedContact = settings.contactImage || null;
+
+  const photos = await loadAllPhotosForPicker();
+
+  loading.style.display = "none";
+  panel.style.display = "block";
+
+  renderPicker("hero-picker", photos, "multi");
+  renderPicker("about-picker", photos, "single-about");
+  renderPicker("contact-picker", photos, "single-contact");
+
+  const saveBtn = document.getElementById("save-site-photos-btn");
+  if (saveBtn && !saveBtn.dataset.bound) {
+    saveBtn.dataset.bound = "1";
+    saveBtn.addEventListener("click", saveSitePhotos);
+  }
+}
+
+function renderPicker(containerId, photos, mode) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = photos.map(p => {
+    let isSel = false;
+    if (mode === "multi") isSel = selectedHero.has(p.path);
+    if (mode === "single-about") isSel = selectedAbout === p.path;
+    if (mode === "single-contact") isSel = selectedContact === p.path;
+    return `
+      <div class="photo-pick ${isSel ? "selected" : ""}" data-path="${p.path}" data-mode="${mode}">
+        <img src="${p.url}" loading="lazy" alt="">
+        <span class="pick-check"><i class="fas fa-check"></i></span>
+      </div>`;
+  }).join("");
+}
+
+document.addEventListener("click", (e) => {
+  const pick = e.target.closest(".photo-pick");
+  if (!pick) return;
+  const path = pick.dataset.path;
+  const mode = pick.dataset.mode;
+
+  if (mode === "multi") {
+    if (selectedHero.has(path)) selectedHero.delete(path);
+    else selectedHero.add(path);
+    pick.classList.toggle("selected");
+  } else if (mode === "single-about") {
+    selectedAbout = path;
+    document.querySelectorAll("#about-picker .photo-pick").forEach(el =>
+      el.classList.toggle("selected", el.dataset.path === path)
+    );
+  } else if (mode === "single-contact") {
+    selectedContact = path;
+    document.querySelectorAll("#contact-picker .photo-pick").forEach(el =>
+      el.classList.toggle("selected", el.dataset.path === path)
+    );
+  }
+});
+
+async function saveSitePhotos() {
+  const log = document.getElementById("site-photos-log");
+  if (!getSessionToken()) {
+    log.innerHTML = `<p class="empty-state">Log in above first.</p>`;
+    return;
+  }
+  log.textContent = "Saving…";
+  try {
+    const settings = {
+      heroImages: Array.from(selectedHero),
+      aboutImage: selectedAbout,
+      contactImage: selectedContact
+    };
+    await ghUpdateTextFile(
+      SITE_CONFIG.siteSettingsFile,
+      JSON.stringify(settings, null, 2),
+      "Update site photo settings"
+    );
+    log.innerHTML = `<span style="color:var(--teal)">✅ Saved — refresh the homepage/about/contact pages to see it.</span>`;
+  } catch (e) {
+    log.innerHTML = `<span style="color:var(--stamp)">Could not save: ${e.message}</span>`;
+  }
 }

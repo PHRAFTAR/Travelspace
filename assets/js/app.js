@@ -42,7 +42,13 @@ function initTheme() {
 
 async function initAboutPhoto() {
   const img = document.getElementById("about-photo");
+  img.onerror = () => { img.closest(".polaroid").style.display = "none"; };
   try {
+    const settings = await loadSiteSettings();
+    if (settings && settings.aboutImage) {
+      img.src = encodeURI(settings.aboutImage);
+      return;
+    }
     const albums = await loadAlbums();
     if (albums.length && albums[0].cover) {
       img.src = encodeURI(albums[0].cover);
@@ -54,7 +60,13 @@ async function initAboutPhoto() {
 
 async function initContactPhoto() {
   const img = document.getElementById("contact-photo");
+  img.onerror = () => { img.closest(".contact-photo-wrap").style.display = "none"; };
   try {
+    const settings = await loadSiteSettings();
+    if (settings && settings.contactImage) {
+      img.src = encodeURI(settings.contactImage);
+      return;
+    }
     const albums = await loadAlbums();
     const pick = albums[1] || albums[0];
     if (pick && pick.cover) {
@@ -132,23 +144,29 @@ function initLightbox() {
 async function initHero() {
   const panel = document.getElementById("hero-image-panel");
 
-  // Slideshow background pulled from album covers (random order each visit) + a live featured strip
   try {
+    const settings = await loadSiteSettings();
     const albums = await loadAlbums();
-    const covers = shuffleArray(albums.map(a => a.cover).filter(Boolean));
+
+    let covers;
+    if (settings && Array.isArray(settings.heroImages) && settings.heroImages.length) {
+      covers = shuffleArray(settings.heroImages);
+    } else {
+      covers = shuffleArray(albums.map(a => a.cover).filter(Boolean));
+    }
+
     if (panel && covers.length) {
       let i = 0;
-      panel.style.backgroundImage = `url('${encodeURI(covers[i])}')`;
+      const setImg = () => { panel.style.backgroundImage = `url('${encodeURI(covers[i])}')`; };
+      setImg();
       if (covers.length > 1) {
-        setInterval(() => {
-          i = (i + 1) % covers.length;
-          panel.style.backgroundImage = `url('${encodeURI(covers[i])}')`;
-        }, 4000);
+        setInterval(() => { i = (i + 1) % covers.length; setImg(); }, 4000);
       }
     }
+
     await renderFeaturedStrip(albums);
   } catch (e) {
-    console.warn("Could not load albums for hero:", e);
+    console.warn("Could not load hero images:", e);
   }
 }
 
