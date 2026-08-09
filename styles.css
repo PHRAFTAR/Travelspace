@@ -1016,3 +1016,92 @@ footer .social-icons a:hover {
 }
 
 main { padding-top: var(--header-h); }
+
+/* ============================================================
+   Animations — scroll reveal, hero entrance, card stagger-in
+   ============================================================ */
+
+body {
+  animation: pageFadeIn 0.45s ease;
+}
+@keyframes pageFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Scroll-triggered reveal (JS toggles .in-view via IntersectionObserver) */
+.reveal {
+  opacity: 0;
+  transform: translateY(26px);
+  transition: opacity 0.7s cubic-bezier(.16,.84,.44,1), transform 0.7s cubic-bezier(.16,.84,.44,1);
+}
+.reveal.in-view {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero: staggered entrance on page load */
+.hero-text-panel > * {
+  opacity: 0;
+  transform: translateY(18px);
+  animation: heroIn 0.85s cubic-bezier(.16,.84,.44,1) forwards;
+}
+.hero-text-panel > *:nth-child(1) { animation-delay: 0.08s; }
+.hero-text-panel > *:nth-child(2) { animation-delay: 0.20s; }
+.hero-text-panel > *:nth-child(3) { animation-delay: 0.32s; }
+.hero-text-panel > *:nth-child(4) { animation-delay: 0.44s; }
+.hero-text-panel > *:nth-child(5) { animation-delay: 0.56s; }
+@keyframes heroIn {
+  to { opacity: 1; transform: none; }
+}
+
+.hero-image-panel {
+  opacity: 0;
+  animation: heroImgIn 1.1s ease forwards;
+  animation-delay: 0.1s;
+}
+@keyframes heroImgIn {
+  to { opacity: 1; }
+}
+
+/* Cards / grid items pop in as they render (gallery cards, photo frames, featured strip) */
+.pop-in {
+  opacity: 0;
+  transform: translateY(18px) scale(0.98);
+  animation: popIn 0.55s cubic-bezier(.16,.84,.44,1) forwards;
+}
+@keyframes popIn {
+  to { opacity: 1; transform: none; }
+}
+
+/* Nav link underline sweep */
+.nav-list li a:not(.theme-toggle) {
+  position: relative;
+}
+.nav-list li a:not(.theme-toggle)::after {
+  content: '';
+  position: absolute;
+  left: 1rem; right: 1rem; bottom: 0.4rem;
+  height: 1px;
+  background: var(--orange);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.nav-list li a:hover::after,
+.nav-list li a.active::after {
+  transform: scaleX(1);
+}
+
+/* Button press feedback */
+.btn:active { transform: scale(0.96); }
+
+/* Respect reduced-motion preference */
+@media (prefers-reduced-motion: reduce) {
+  body, .reveal, .hero-text-panel > *, .hero-image-panel, .pop-in {
+    animation: none !important;
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
