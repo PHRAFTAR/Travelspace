@@ -110,24 +110,54 @@ function setPill(el, kind, text) {
   el.textContent = text;
 }
 
-/* ---------------- Album select ---------------- */
-async function initAlbumSelect() {
-  const select = document.getElementById("album-select");
-  const newFields = document.getElementById("new-album-fields");
-  const nameInput = document.getElementById("new-album-name");
-  const slugPreview = document.getElementById("new-album-slug");
+/* ---------------- Folder select (category) ---------------- */
+let foldersCache = [];
 
-  albumsCache = await loadAlbums().catch(() => []);
-  select.innerHTML = albumsCache.map(a => `<option value="${a.id}">${a.name}</option>`).join("")
-    + `<option value="__new__">+ Create new album…</option>`;
+async function initFolderSelect() {
+  const select = document.getElementById("folder-select");
+  const newFields = document.getElementById("new-folder-fields");
+
+  foldersCache = await loadFolders().catch(() => []);
+  select.innerHTML = foldersCache.map(f => `<option value="${f.id}">${f.name}</option>`).join("")
+    + `<option value="__new__">+ Create new folder…</option>`;
 
   select.addEventListener("change", () => {
     newFields.style.display = select.value === "__new__" ? "flex" : "none";
+    populateAlbumSelect();
   });
 
+  await populateAlbumSelect();
+}
+
+/* ---------------- Album select (filtered by chosen folder) ---------------- */
+async function initAlbumSelect() {
+  albumsCache = await loadAlbums().catch(() => []);
+  await initFolderSelect();
+
+  const nameInput = document.getElementById("new-album-name");
+  const slugPreview = document.getElementById("new-album-slug");
   nameInput.addEventListener("input", () => {
     slugPreview.textContent = slugify(nameInput.value) || "your-album-name";
   });
+}
+
+function populateAlbumSelect() {
+  const folderSelect = document.getElementById("folder-select");
+  const select = document.getElementById("album-select");
+  const newFields = document.getElementById("new-album-fields");
+  const chosenFolderId = folderSelect.value;
+
+  const filtered = chosenFolderId === "__new__"
+    ? []
+    : albumsCache.filter(a => a.folderId === chosenFolderId);
+
+  select.innerHTML = filtered.map(a => `<option value="${a.id}">${a.name}</option>`).join("")
+    + `<option value="__new__">+ Create new album…</option>`;
+
+  select.onchange = () => {
+    newFields.style.display = select.value === "__new__" ? "flex" : "none";
+  };
+  select.onchange();
 }
 
 function slugify(str) {
@@ -178,6 +208,7 @@ function renderQueue() {
 /* ---------------- Upload ---------------- */
 async function startUpload() {
   const log = document.getElementById("upload-log");
+  const folderSelect = document.getElementById("folder-select");
   const select = document.getElementById("album-select");
   const btn = document.getElementById("upload-btn");
 
@@ -190,11 +221,32 @@ async function startUpload() {
     return;
   }
 
-  let targetFolder, targetAlbumId, targetAlbumName, isNewAlbum = false;
+  // Resolve folder (existing or new)
+  let targetFolderId, targetFolderName, isNewFolder = false, newFolderDesc = "";
+  if (folderSelect.value === "__new__") {
+    const name = document.getElementById("new-folder-name").value.trim();
+    if (!name) {
+      log.innerHTML = `<p class="empty-state">Give your new folder a name first.</p>`;
+      return;
+    }
+    targetFolderId = slugify(name);
+    targetFolderName = name;
+    newFolderDesc = document.getElementById("new-folder-desc").value.trim();
+    isNewFolder = true;
+  } else {
+    const folder = foldersCache.find(f => f.id === folderSelect.value);
+    if (!folder) {
+      log.innerHTML = `<p class="empty-state">Pick a folder first.</p>`;
+      return;
+    }
+    targetFolderId = folder.id;
+    targetFolderName = folder.name;
+  }
 
+  // Resolve album (existing or new)
+  let targetFolder, targetAlbumId, targetAlbumName, isNewAlbum = false, newLocation = "", newDate = "";
   if (select.value === "__new__") {
-    const nameInput = document.getElementById("new-album-name");
-    const name = nameInput.value.trim();
+    const name = document.getElementById("new-album-name").value.trim();
     if (!name) {
       log.innerHTML = `<p class="empty-state">Give your new album a name first.</p>`;
       return;
@@ -203,6 +255,8 @@ async function startUpload() {
     targetFolder = slug;
     targetAlbumId = slug;
     targetAlbumName = name;
+    newLocation = document.getElementById("new-album-location").value.trim();
+    newDate = document.getElementById("new-album-date").value.trim();
     isNewAlbum = true;
   } else {
     const album = albumsCache.find(a => a.id === select.value);
@@ -241,9 +295,31 @@ async function startUpload() {
     renderQueue();
   }
 
-  // If this was a new album, register it in albums.json after first successful file
-  if (isNewAlbum && firstUploadedPath) {
-    try {
+  if (!firstUploadedPath) {
+    log.innerHTML = `<p class="empty-state">Nothing uploaded successfully — check the errors above.</p>`;
+    btn.disabled = false;
+    btn.textContent = "Upload All";
+    return;
+  }
+
+  try {
+    // Create the folder entry first, if new
+    if (isNewFolder) {
+      const fileMeta = await ghGetFile(SITE_CONFIG.foldersFile);
+      const currentText = fileMeta ? decodeURIComponent(escape(atob(fileMeta.content.replace(/\n/g, "")))) : "[]";
+      const folders = JSON.parse(currentText);
+      folders.push({
+        id: targetFolderId,
+        name: targetFolderName,
+        icon: "fa-folder-open",
+        description: newFolderDesc,
+        cover: firstUploadedPath
+      });
+      await ghUpdateTextFile(SITE_CONFIG.foldersFile, JSON.stringify(folders, null, 2), `Add new folder: ${targetFolderName}`);
+    }
+
+    // Register the album, if new
+    if (isNewAlbum) {
       const fileMeta = await ghGetFile(SITE_CONFIG.albumsFile);
       const currentText = fileMeta ? decodeURIComponent(escape(atob(fileMeta.content.replace(/\n/g, "")))) : "[]";
       const albums = JSON.parse(currentText);
@@ -252,15 +328,17 @@ async function startUpload() {
         code: targetAlbumId.slice(0, 3).toUpperCase(),
         name: targetAlbumName,
         folder: targetFolder,
-        cover: firstUploadedPath
+        cover: firstUploadedPath,
+        folderId: targetFolderId,
+        location: newLocation,
+        date: newDate
       });
       await ghUpdateTextFile(SITE_CONFIG.albumsFile, JSON.stringify(albums, null, 2), `Add new album: ${targetAlbumName}`);
-      log.innerHTML = `<p>✅ New album <b>${targetAlbumName}</b> created with ${successCount} file(s). <a href="album.html?id=${encodeURIComponent(targetAlbumId)}" style="color:var(--stamp)">View it →</a></p>`;
-    } catch (e) {
-      log.innerHTML = `<p>Files uploaded, but couldn't update albums.json automatically: ${e.message}. You may need to add it manually.</p>`;
     }
-  } else {
-    log.innerHTML = `<p>✅ Uploaded ${successCount} of ${queuedFiles.length} file(s) to <b>${targetAlbumName}</b>. <a href="album.html?id=${encodeURIComponent(targetAlbumId)}" style="color:var(--stamp)">View album →</a></p>`;
+
+    log.innerHTML = `<p>✅ Uploaded ${successCount} file(s) to <b>${targetAlbumName}</b> in <b>${targetFolderName}</b>. <a href="album.html?id=${encodeURIComponent(targetAlbumId)}" style="color:var(--orange)">View album →</a></p>`;
+  } catch (e) {
+    log.innerHTML = `<p>Files uploaded, but couldn't update folders.json/albums.json automatically: ${e.message}.</p>`;
   }
 
   btn.disabled = false;

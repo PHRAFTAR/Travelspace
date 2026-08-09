@@ -4,16 +4,91 @@ document.addEventListener("DOMContentLoaded", () => {
   initLightbox();
   initDeleteAuth();
   initScrollReveal();
+  initTextReveal();
   initCustomCursor();
   initHeaderScroll();
   initPageTransitions();
   initContactForm();
-  if (document.getElementById("hero-image-panel")) initHero();
+  initSmoothScroll();
+  init3DTiltCards();
+  initHeroTextReveal();
+  if (document.getElementById("hero-image-panel")) {
+    initHero();
+  }
   if (document.getElementById("about-photo")) initAboutPhoto();
   if (document.getElementById("contact-photo")) initContactPhoto();
-  if (document.getElementById("album-grid")) renderGalleryPage();
+  if (document.getElementById("folder-grid")) renderFoldersPage();
+  if (document.getElementById("folder-title")) renderFolderPage();
   if (document.getElementById("contact-sheet")) renderAlbumPage();
 });
+
+/* ---------------- Smooth Scroll (Lenis) ---------------- */
+function initSmoothScroll() {
+  if (typeof Lenis !== "undefined") {
+    const lenis = new Lenis({
+      duration: 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: "vertical",
+      smoothWheel: true
+    });
+
+    function raf(time) {
+      lenis.raf(time);
+      requestAnimationFrame(raf);
+    }
+    requestAnimationFrame(raf);
+
+    if (typeof gsap !== "undefined" && typeof ScrollTrigger !== "undefined") {
+      gsap.registerPlugin(ScrollTrigger);
+      lenis.on("scroll", ScrollTrigger.update);
+      gsap.ticker.add((time) => lenis.raf(time * 1000));
+      gsap.ticker.lagSmoothing(0, 0);
+    }
+  }
+}
+
+/* ---------------- Sequential Hero Text Reveal ---------------- */
+function initHeroTextReveal() {
+  const words = document.querySelectorAll(".hero-word");
+  if (!words.length) return;
+
+  words.forEach((word, idx) => {
+    setTimeout(() => {
+      word.classList.add("in-view");
+    }, 200 + idx * 300);
+  });
+}
+
+/* ---------------- 3D Card Tilt Effect ---------------- */
+function init3DTiltCards() {
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+  const selector = ".boarding-pass, .polaroid, .passport-card, .contact-photo, .frame";
+
+  document.addEventListener("mousemove", (e) => {
+    const card = e.target.closest(selector);
+    if (!card) return;
+
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+
+    const rotateX = ((y - centerY) / centerY) * -3.5;
+    const rotateY = ((x - centerX) / centerX) * 3.5;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateZ(6px)`;
+  });
+
+  document.addEventListener("mouseout", (e) => {
+    const card = e.target.closest(selector);
+    if (card && !card.contains(e.relatedTarget)) {
+      card.style.transform = "perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px)";
+    }
+  });
+}
 
 /* ---------------- Custom cursor (desktop only) ---------------- */
 function initCustomCursor() {
@@ -140,6 +215,41 @@ function initScrollReveal() {
   els.forEach(el => obs.observe(el));
 }
 
+/* ---------------- Word-by-word text reveal on scroll ---------------- */
+function initTextReveal() {
+  // Only split plain-text elements (no nested tags) so we don't destroy markup
+  const selector = ".section-sub, .prose p, .hero-sub, .footer-tagline";
+  const targets = [...document.querySelectorAll(selector)].filter(
+    el => el.children.length === 0 || el.querySelectorAll("i, span").length === el.children.length
+  );
+
+  targets.forEach(el => {
+    if (el.dataset.split) return;
+    el.dataset.split = "1";
+    const words = el.textContent.trim().split(/\s+/);
+    el.innerHTML = words.map(w => `<span class="reveal-word">${w}</span>`).join(" ");
+  });
+
+  if (!targets.length || !("IntersectionObserver" in window)) {
+    targets.forEach(el => el.querySelectorAll(".reveal-word").forEach(w => w.classList.add("in-view")));
+    return;
+  }
+
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const words = entry.target.querySelectorAll(".reveal-word");
+      words.forEach((w, i) => {
+        w.style.transitionDelay = `${Math.min(i * 0.03, 0.6)}s`;
+        w.classList.add("in-view");
+      });
+      obs.unobserve(entry.target);
+    });
+  }, { threshold: 0.3, rootMargin: "0px 0px -30px 0px" });
+
+  targets.forEach(el => obs.observe(el));
+}
+
 /* ---------------- Theme toggle (dark / light) ---------------- */
 function initTheme() {
   const KEY = "ts_theme";
@@ -240,8 +350,9 @@ function initNav() {
 
   // highlight current page in nav
   const current = window.location.pathname.split("/").pop() || "index.html";
-  document.querySelectorAll(".nav-list a").forEach(a => {
+  document.querySelectorAll(".nav-list a, .mobile-tab-bar a").forEach(a => {
     if (a.getAttribute("href") === current) a.classList.add("active");
+    else a.classList.remove("active");
   });
 }
 
@@ -316,6 +427,8 @@ function initLightbox() {
 /* ---------------- Homepage hero ---------------- */
 async function initHero() {
   const panel = document.getElementById("hero-image-panel");
+  const photoLayer = document.getElementById("hero-photo-layer");
+  const layer = photoLayer || panel;
 
   try {
     const settings = await loadSiteSettings();
@@ -328,12 +441,12 @@ async function initHero() {
       covers = shuffleArray(albums.map(a => a.cover).filter(Boolean));
     }
 
-    if (panel && covers.length) {
+    if (layer && covers.length) {
       let i = 0;
-      const setImg = () => { panel.style.backgroundImage = `url('${encodeURI(covers[i])}')`; };
+      const setImg = () => { layer.style.backgroundImage = `url('${encodeURI(covers[i])}')`; };
       setImg();
       if (covers.length > 1) {
-        setInterval(() => { i = (i + 1) % covers.length; setImg(); }, 4000);
+        setInterval(() => { i = (i + 1) % covers.length; setImg(); }, 5000);
       }
     }
 
@@ -342,14 +455,36 @@ async function initHero() {
     console.warn("Could not load hero images:", e);
   }
 
-  // Subtle parallax on the hero photo as the page scrolls
-  if (panel) {
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+  // Scroll parallax (image drifts slightly slower than the page)
+  if (photoLayer) {
     window.addEventListener("scroll", () => {
       const y = window.scrollY;
       if (y < window.innerHeight) {
-        panel.style.backgroundPosition = `center ${20 + y * 0.04}%`;
+        photoLayer.style.backgroundPosition = `center ${20 + y * 0.04}%`;
       }
     }, { passive: true });
+  }
+
+  // Subtle mouse-based parallax tilt on the hero photo (desktop only, GPU-cheap)
+  if (photoLayer && panel && canHover && !reduced) {
+    let targetX = 0, targetY = 0, curX = 0, curY = 0;
+
+    panel.addEventListener("mousemove", (e) => {
+      const rect = panel.getBoundingClientRect();
+      targetX = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      targetY = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+    });
+    panel.addEventListener("mouseleave", () => { targetX = 0; targetY = 0; });
+
+    (function tick() {
+      curX += (targetX - curX) * 0.06;
+      curY += (targetY - curY) * 0.06;
+      photoLayer.style.transform = `translate3d(${curX * -12}px, ${curY * -9}px, 0) scale(1.045)`;
+      requestAnimationFrame(tick);
+    })();
   }
 }
 
@@ -377,52 +512,169 @@ async function renderFeaturedStrip(albums) {
             : `<img src="${f.download_url}" alt="${first.name} photo" loading="lazy">`}
         </div>`;
     }).join("");
+
+    initFeaturedDots(strip, media.length);
   } catch (e) {
     strip.innerHTML = '<p class="empty-state">Could not load photos right now.</p>';
   }
 }
 
-/* ---------------- Gallery page: boarding-pass album cards ---------------- */
-async function renderGalleryPage() {
-  const grid = document.getElementById("album-grid");
-  grid.innerHTML = '<p class="empty-state">Loading albums…</p>';
+function initFeaturedDots(strip, count) {
+  const dotsEl = document.getElementById("featured-dots");
+  if (!dotsEl || count < 2) return;
 
-  let albums = [];
+  dotsEl.innerHTML = Array.from({ length: count }, (_, i) =>
+    `<span class="dot${i === 0 ? " active" : ""}"></span>`
+  ).join("");
+
+  const dots = [...dotsEl.querySelectorAll(".dot")];
+  strip.addEventListener("scroll", () => {
+    const idx = Math.round(strip.scrollLeft / strip.clientWidth);
+    dots.forEach((d, i) => d.classList.toggle("active", i === idx));
+  }, { passive: true });
+}
+
+/* ---------------- Gallery page: FOLDERS grid (top level) ---------------- */
+async function renderFoldersPage() {
+  const grid = document.getElementById("folder-grid");
+  grid.innerHTML = '<p class="empty-state">Loading folders…</p>';
+
+  let folders = [], albums = [];
   try {
+    folders = await loadFolders();
     albums = await loadAlbums();
   } catch (e) {
-    grid.innerHTML = '<p class="empty-state">Could not load albums.json — check assets/js/config.js.</p>';
+    grid.innerHTML = '<p class="empty-state">Could not load folders.json — check assets/js/config.js.</p>';
     return;
   }
 
-  const cards = await Promise.all(albums.map(async (album, idx) => {
-    let count = "—";
-    try {
-      const files = await ghListFolder(album.folder);
-      count = files.filter(f => f.type === "file" && isMediaFile(f.name)).length;
-    } catch (e) { /* leave as — */ }
+  if (!folders.length) {
+    grid.innerHTML = `<p class="empty-state">No folders yet. <a href="upload.html" style="color:var(--orange)">Create one →</a></p>`;
+    return;
+  }
 
-    const code = album.code || album.id.slice(0, 3).toUpperCase();
+  const cards = folders.map((folder, idx) => {
+    const albumCount = albums.filter(a => a.folderId === folder.id).length;
     return `
-      <a class="boarding-pass pop-in" style="animation-delay:${idx * 0.07}s" href="album.html?id=${encodeURIComponent(album.id)}">
-        <div class="bp-image" style="background-image:url('${encodeURI(album.cover)}')">
-          <span class="bp-code">${code}-${String(idx + 1).padStart(2, "0")}</span>
+      <a class="boarding-pass pop-in" style="animation-delay:${idx * 0.07}s" href="folder.html?id=${encodeURIComponent(folder.id)}">
+        <div class="bp-image" style="background-image:url('${encodeURI(folder.cover || "")}')">
+          <span class="bp-code"><i class="${folder.icon || "fa-folder-open"} fas"></i></span>
         </div>
         <div class="bp-stub">
-          <h3 class="bp-name">${album.name}</h3>
+          <h3 class="bp-name">${folder.name}</h3>
           <div class="bp-meta">
-            <span class="bp-count"><i class="fas fa-map-marker-alt"></i> ${count} ITEMS</span>
+            <span class="bp-count"><i class="fas fa-images"></i> ${albumCount} ALBUM${albumCount === 1 ? "" : "S"}</span>
             <span class="bp-arrow"><i class="fas fa-arrow-right"></i></span>
           </div>
         </div>
       </a>`;
-  }));
+  });
 
   grid.innerHTML = cards.join("") + `
-    <a class="boarding-pass new-album pop-in" style="animation-delay:${albums.length * 0.07}s" href="upload.html">
+    <a class="boarding-pass new-album pop-in" style="animation-delay:${folders.length * 0.07}s" href="upload.html">
       <i class="fas fa-plus"></i>
-      <span>Start New Album</span>
+      <span>New Folder / Album</span>
     </a>`;
+}
+
+/* ---------------- Folder detail page: albums inside one folder ---------------- */
+async function renderFolderPage() {
+  const grid = document.getElementById("album-grid");
+  const params = new URLSearchParams(window.location.search);
+  const id = params.get("id");
+
+  if (!id) {
+    grid.innerHTML = '<p class="empty-state">No folder specified.</p>';
+    return;
+  }
+
+  const [folders, allAlbums] = await Promise.all([loadFolders(), loadAlbums()]);
+  const folder = folders.find(f => f.id === id);
+
+  if (!folder) {
+    document.getElementById("folder-title").textContent = "Folder not found";
+    grid.innerHTML = '<p class="empty-state">This folder doesn\'t exist in folders.json.</p>';
+    return;
+  }
+
+  document.title = `${folder.name} - TravelSpace`;
+  document.getElementById("folder-crumb").textContent = folder.name;
+  document.getElementById("folder-title").textContent = folder.name;
+  document.getElementById("folder-desc").textContent = folder.description || "";
+
+  let albums = allAlbums.filter(a => a.folderId === folder.id);
+
+  const banner = document.getElementById("folder-banner");
+  if (banner && folder.cover) {
+    banner.style.backgroundImage = `linear-gradient(180deg, rgba(14,13,12,0.35) 0%, rgba(14,13,12,0.95) 100%), url('${encodeURI(folder.cover)}')`;
+  }
+
+  document.getElementById("folder-stats").innerHTML = `
+    <span><i class="fas fa-images"></i> ${albums.length} ALBUM${albums.length === 1 ? "" : "S"}</span>
+    <span><i class="fas fa-location-dot"></i> ${[...new Set(albums.map(a => a.location).filter(Boolean))].join(", ") || "—"}</span>
+  `;
+
+  function sortAlbums(mode) {
+    const sorted = [...albums];
+    if (mode === "az") sorted.sort((a, b) => a.name.localeCompare(b.name));
+    else if (mode === "oldest") sorted.sort((a, b) => (a.date || "").localeCompare(b.date || ""));
+    else sorted.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    return sorted;
+  }
+
+  async function draw(mode, view) {
+    const list = sortAlbums(mode);
+    if (!list.length) {
+      grid.innerHTML = `<p class="empty-state">No albums in this folder yet. <a href="upload.html" style="color:var(--orange)">Add one →</a></p>`;
+      return;
+    }
+    const cards = await Promise.all(list.map(async (album, idx) => {
+      let count = "—";
+      try {
+        const files = await ghListFolder(album.folder);
+        count = files.filter(f => f.type === "file" && isMediaFile(f.name)).length;
+      } catch (e) { /* leave as — */ }
+
+      const code = album.code || album.id.slice(0, 3).toUpperCase();
+      return `
+        <a class="boarding-pass pop-in" style="animation-delay:${idx * 0.06}s" href="album.html?id=${encodeURIComponent(album.id)}">
+          <div class="bp-image" style="background-image:url('${encodeURI(album.cover)}')">
+            <span class="bp-photocount">${count} PHOTOS</span>
+            <span class="bp-code">${String(idx + 1).padStart(2, "0")}</span>
+          </div>
+          <div class="bp-stub">
+            <h3 class="bp-name"><span class="bp-idx">${String(idx + 1).padStart(2, "0")}</span> ${album.name}</h3>
+            <div class="bp-meta">
+              <span class="bp-count"><i class="fas fa-location-dot"></i> ${album.location || ""} &nbsp; <i class="fas fa-calendar"></i> ${album.date || ""}</span>
+              <span class="bp-arrow"><i class="fas fa-arrow-right"></i></span>
+            </div>
+          </div>
+        </a>`;
+    }));
+    grid.className = view === "list" ? "album-grid list-view" : "album-grid";
+    grid.innerHTML = cards.join("");
+  }
+
+  let currentSort = "latest";
+  let currentView = "grid";
+  await draw(currentSort, currentView);
+
+  document.getElementById("sort-select")?.addEventListener("change", (e) => {
+    currentSort = e.target.value;
+    draw(currentSort, currentView);
+  });
+  document.getElementById("grid-view-btn")?.addEventListener("click", (e) => {
+    currentView = "grid";
+    document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
+    e.currentTarget.classList.add("active");
+    draw(currentSort, currentView);
+  });
+  document.getElementById("list-view-btn")?.addEventListener("click", (e) => {
+    currentView = "list";
+    document.querySelectorAll(".view-btn").forEach(b => b.classList.remove("active"));
+    e.currentTarget.classList.add("active");
+    draw(currentSort, currentView);
+  });
 }
 
 /* ---------------- Album detail page: contact-sheet grid ---------------- */
@@ -449,6 +701,11 @@ async function renderAlbumPage() {
 
   if (titleEl) titleEl.textContent = album.name;
   document.title = `${album.name} - TravelSpace`;
+
+  const backLink = document.querySelector(".section-eyebrow a");
+  if (backLink && album.folderId) {
+    backLink.href = `folder.html?id=${encodeURIComponent(album.folderId)}`;
+  }
 
   sheet.innerHTML = '<p class="empty-state">Loading photos…</p>';
 

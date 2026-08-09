@@ -93,16 +93,33 @@ function authHeaders(extra = {}) {
   return headers;
 }
 
-// List files in a folder. Returns [] if folder doesn't exist yet.
+// List files in a folder. Returns [] only if the folder genuinely doesn't
+// exist (404). Throws on real failures so pages can show a clear error
+// instead of silently claiming the album is empty.
 async function ghListFolder(path) {
-  const res = await fetch(
-    `${apiBase()}/contents/${encodePath(path)}?ref=${SITE_CONFIG.branch}`,
-    { headers: authHeaders() }
-  );
-  if (res.status === 404) return [];
-  if (!res.ok) throw new Error(`GitHub error ${res.status}: ${res.statusText}`);
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
+  let liveStatus = null;
+  try {
+    const res = await fetch(
+      `${apiBase()}/contents/${encodePath(path)}?ref=${SITE_CONFIG.branch}`,
+      { headers: authHeaders() }
+    );
+    liveStatus = res.status;
+    if (res.status === 404) return [];
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch (e) { /* network error, try local fallback below */ }
+
+  try {
+    const localRes = await fetch(`/api/local-folder?path=${encodeURIComponent(path)}`);
+    if (localRes.ok) {
+      const data = await localRes.json();
+      if (Array.isArray(data)) return data;
+    }
+  } catch (e) { /* no local server available, that's expected on GitHub Pages */ }
+
+  throw new Error(liveStatus ? `GitHub error ${liveStatus}` : "Could not reach GitHub");
 }
 
 // Get a single file's metadata + content (needed to obtain its "sha" for updates)
