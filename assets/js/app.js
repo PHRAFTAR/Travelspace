@@ -4,6 +4,10 @@ document.addEventListener("DOMContentLoaded", () => {
   initLightbox();
   initDeleteAuth();
   initScrollReveal();
+  initCustomCursor();
+  initHeaderScroll();
+  initPageTransitions();
+  initContactForm();
   if (document.getElementById("hero-image-panel")) initHero();
   if (document.getElementById("about-photo")) initAboutPhoto();
   if (document.getElementById("contact-photo")) initContactPhoto();
@@ -11,7 +15,114 @@ document.addEventListener("DOMContentLoaded", () => {
   if (document.getElementById("contact-sheet")) renderAlbumPage();
 });
 
-/* ---------------- Scroll-reveal (fades sections in as you scroll) ---------------- */
+/* ---------------- Custom cursor (desktop only) ---------------- */
+function initCustomCursor() {
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
+
+  const dot = document.createElement("div");
+  dot.className = "cursor-dot";
+  const ring = document.createElement("div");
+  ring.className = "cursor-ring";
+  ring.innerHTML = '<span class="cursor-label"></span>';
+  document.body.appendChild(dot);
+  document.body.appendChild(ring);
+  const label = ring.querySelector(".cursor-label");
+
+  let mouseX = 0, mouseY = 0, ringX = 0, ringY = 0;
+  let active = false;
+
+  document.addEventListener("mousemove", (e) => {
+    mouseX = e.clientX; mouseY = e.clientY;
+    dot.style.left = mouseX + "px";
+    dot.style.top = mouseY + "px";
+    if (!active) {
+      active = true;
+      document.body.classList.add("cursor-active");
+    }
+  });
+
+  function raf() {
+    ringX += (mouseX - ringX) * 0.18;
+    ringY += (mouseY - ringY) * 0.18;
+    ring.style.left = ringX + "px";
+    ring.style.top = ringY + "px";
+    requestAnimationFrame(raf);
+  }
+  requestAnimationFrame(raf);
+
+  document.addEventListener("mouseover", (e) => {
+    const img = e.target.closest(".contact-sheet .frame img, .featured-item img, .bp-image");
+    const clickable = e.target.closest("a, button, .photo-pick");
+    if (img) {
+      ring.classList.add("hover-label");
+      label.textContent = "VIEW";
+    } else if (clickable) {
+      ring.classList.add("hover");
+      ring.classList.remove("hover-label");
+    } else {
+      ring.classList.remove("hover", "hover-label");
+    }
+  });
+}
+
+/* ---------------- Header: shrink + darken on scroll ---------------- */
+function initHeaderScroll() {
+  const header = document.querySelector("header");
+  if (!header) return;
+  const toggle = () => {
+    header.classList.toggle("scrolled", window.scrollY > 40);
+  };
+  toggle();
+  window.addEventListener("scroll", toggle, { passive: true });
+}
+
+/* ---------------- Page fade transition on internal nav clicks ---------------- */
+function initPageTransitions() {
+  let overlay = document.querySelector(".page-transition-overlay");
+  if (!overlay) {
+    overlay = document.createElement("div");
+    overlay.className = "page-transition-overlay";
+    document.body.appendChild(overlay);
+  }
+
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest("a");
+    if (!link) return;
+    const href = link.getAttribute("href");
+    if (!href || href.startsWith("http") || href.startsWith("#") || link.target === "_blank") return;
+    if (!href.endsWith(".html") && !href.includes(".html?")) return;
+
+    e.preventDefault();
+    overlay.classList.add("active");
+    setTimeout(() => { window.location.href = href; }, 320);
+  });
+}
+
+/* ---------------- Contact form: AJAX submit + postcard success state ---------------- */
+function initContactForm() {
+  const form = document.getElementById("contact-form");
+  if (!form) return;
+  const btn = document.getElementById("contact-submit-btn");
+  const success = document.getElementById("postcard-success");
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    btn.disabled = true;
+    btn.textContent = "Sending…";
+
+    const data = new FormData(form);
+    fetch(form.action, { method: "POST", mode: "no-cors", body: data })
+      .then(() => {
+        form.style.display = "none";
+        success.classList.add("show");
+      })
+      .catch(() => {
+        form.style.display = "none";
+        success.classList.add("show");
+      });
+  });
+}
+
 function initScrollReveal() {
   const els = document.querySelectorAll(".reveal");
   if (!els.length || !("IntersectionObserver" in window)) {
@@ -134,28 +245,71 @@ function initNav() {
   });
 }
 
-/* ---------------- Lightbox (event-delegated, works for dynamically added images) ---------------- */
+/* ---------------- Lightbox (event-delegated, prev/next + counter + keyboard) ---------------- */
+let lightboxItems = [];
+let lightboxIndex = 0;
+
 function initLightbox() {
   const modal = document.getElementById("myModal");
   if (!modal) return;
   const modalImg = document.getElementById("img01");
   const closeBtn = modal.querySelector(".close");
+  const prevBtn = modal.querySelector(".modal-prev");
+  const nextBtn = modal.querySelector(".modal-next");
+  const counter = document.getElementById("modal-counter");
+
+  function updateLightbox() {
+    const item = lightboxItems[lightboxIndex];
+    if (!item) return;
+    modalImg.src = item.full;
+    if (counter) {
+      counter.textContent = `${String(lightboxIndex + 1).padStart(2, "0")} / ${String(lightboxItems.length).padStart(2, "0")}`;
+      counter.style.display = lightboxItems.length > 1 ? "block" : "none";
+    }
+    if (prevBtn) prevBtn.style.display = lightboxItems.length > 1 ? "flex" : "none";
+    if (nextBtn) nextBtn.style.display = lightboxItems.length > 1 ? "flex" : "none";
+  }
 
   document.addEventListener("click", (e) => {
     const trigger = e.target.closest(".modal-image");
     if (!trigger) return;
     if (trigger.tagName === "VIDEO") return; // let videos play inline instead
+
+    // Build the navigable set from all image triggers currently in the DOM
+    lightboxItems = [...document.querySelectorAll(".modal-image")]
+      .filter(el => el.tagName !== "VIDEO")
+      .map(el => ({ full: el.dataset.full || el.src }));
+    lightboxIndex = lightboxItems.findIndex(it => it.full === (trigger.dataset.full || trigger.src));
+    if (lightboxIndex < 0) lightboxIndex = 0;
+
     modal.style.display = "flex";
-    modalImg.src = trigger.dataset.full || trigger.src;
+    updateLightbox();
   });
 
   const close = () => (modal.style.display = "none");
+  const showPrev = () => { lightboxIndex = (lightboxIndex - 1 + lightboxItems.length) % lightboxItems.length; updateLightbox(); };
+  const showNext = () => { lightboxIndex = (lightboxIndex + 1) % lightboxItems.length; updateLightbox(); };
+
   if (closeBtn) closeBtn.onclick = close;
+  if (prevBtn) prevBtn.onclick = showPrev;
+  if (nextBtn) nextBtn.onclick = showNext;
+
   modal.addEventListener("click", (e) => {
     if (e.target === modal) close();
   });
   document.addEventListener("keydown", (e) => {
+    if (modal.style.display !== "flex") return;
     if (e.key === "Escape") close();
+    if (e.key === "ArrowLeft") showPrev();
+    if (e.key === "ArrowRight") showNext();
+  });
+
+  // Basic swipe support on mobile
+  let touchStartX = 0;
+  modal.addEventListener("touchstart", (e) => { touchStartX = e.touches[0].clientX; });
+  modal.addEventListener("touchend", (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) (dx > 0 ? showPrev : showNext)();
   });
 }
 
@@ -186,6 +340,16 @@ async function initHero() {
     await renderFeaturedStrip(albums);
   } catch (e) {
     console.warn("Could not load hero images:", e);
+  }
+
+  // Subtle parallax on the hero photo as the page scrolls
+  if (panel) {
+    window.addEventListener("scroll", () => {
+      const y = window.scrollY;
+      if (y < window.innerHeight) {
+        panel.style.backgroundPosition = `center ${20 + y * 0.04}%`;
+      }
+    }, { passive: true });
   }
 }
 
