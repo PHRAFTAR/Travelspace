@@ -3,12 +3,31 @@ document.addEventListener("DOMContentLoaded", () => {
   initNav();
   initLightbox();
   initDeleteAuth();
+  initScrollReveal();
   if (document.getElementById("hero-image-panel")) initHero();
   if (document.getElementById("about-photo")) initAboutPhoto();
   if (document.getElementById("contact-photo")) initContactPhoto();
   if (document.getElementById("album-grid")) renderGalleryPage();
   if (document.getElementById("contact-sheet")) renderAlbumPage();
 });
+
+/* ---------------- Scroll-reveal (fades sections in as you scroll) ---------------- */
+function initScrollReveal() {
+  const els = document.querySelectorAll(".reveal");
+  if (!els.length || !("IntersectionObserver" in window)) {
+    els.forEach(el => el.classList.add("in-view"));
+    return;
+  }
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("in-view");
+        obs.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: "0px 0px -40px 0px" });
+  els.forEach(el => obs.observe(el));
+}
 
 /* ---------------- Theme toggle (dark / light) ---------------- */
 function initTheme() {
@@ -187,7 +206,7 @@ async function renderFeaturedStrip(albums) {
       const isVideo = isVideoFile(f.name);
       const tag = String(idx + 1).padStart(2, "0");
       return `
-        <div class="featured-item">
+        <div class="featured-item pop-in" style="animation-delay:${idx * 0.08}s">
           <span class="frame-tag">FRAME ${tag}</span>
           ${isVideo
             ? `<video controls preload="metadata"><source src="${f.download_url}" type="video/mp4"></video>`
@@ -221,7 +240,7 @@ async function renderGalleryPage() {
 
     const code = album.code || album.id.slice(0, 3).toUpperCase();
     return `
-      <a class="boarding-pass" href="album.html?id=${encodeURIComponent(album.id)}">
+      <a class="boarding-pass pop-in" style="animation-delay:${idx * 0.07}s" href="album.html?id=${encodeURIComponent(album.id)}">
         <div class="bp-image" style="background-image:url('${encodeURI(album.cover)}')">
           <span class="bp-code">${code}-${String(idx + 1).padStart(2, "0")}</span>
         </div>
@@ -236,7 +255,7 @@ async function renderGalleryPage() {
   }));
 
   grid.innerHTML = cards.join("") + `
-    <a class="boarding-pass new-album" href="upload.html">
+    <a class="boarding-pass new-album pop-in" style="animation-delay:${albums.length * 0.07}s" href="upload.html">
       <i class="fas fa-plus"></i>
       <span>Start New Album</span>
     </a>`;
@@ -284,7 +303,7 @@ async function renderAlbumPage() {
       const isVideo = isVideoFile(f.name);
       const tag = String(idx + 1).padStart(2, "0");
       return `
-        <div class="frame" data-path="${f.path}">
+        <div class="frame pop-in" style="animation-delay:${Math.min(idx * 0.035, 0.6)}s" data-path="${f.path}">
           ${isVideo
             ? `<video class="modal-image" src="${f.download_url}" controls preload="metadata"></video>`
             : `<img class="modal-image" src="${f.download_url}" data-full="${f.download_url}" alt="${album.name} photo ${tag}" loading="lazy">`}
